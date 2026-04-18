@@ -1,6 +1,7 @@
 import { Page, Locator, expect} from '@playwright/test'
 import {getOtp} from  '../utils/gmailApiAuth'
 import {step} from '../utils/stepDecorator'
+import { getSalesforceAccessToken } from '../utils/salesforceAuth'
 
 export class LoginPage{
     readonly page: Page;
@@ -31,6 +32,19 @@ export class LoginPage{
         await expect(this.txtVerificationCode).toBeVisible({timeout:10000});
         await this.page.waitForTimeout(5000);
         await this.enterVerificationCode();
+    }
+
+    /*
+        uses the Connected App credentials to get an access token 
+        via the OAuth username-password flow and navigates directly to Salesforce 
+        use this if the connected app credentials are known
+    */
+    @step('Login to the Application with OAuth Token')
+    async loginWithOAuthToken(){
+        const { accessToken, instanceUrl } = await getSalesforceAccessToken();
+        await this.page.goto(
+            `${instanceUrl}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/lightning/page/home`
+        );
     }
 
     private async enterVerificationCode(maxRetries: number = 3){
